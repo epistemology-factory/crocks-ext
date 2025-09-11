@@ -1,14 +1,21 @@
 "use strict";
 
+const Pair = require("crocks/Pair");
+const Result = require("crocks/Result");
+
+const binary = require("crocks/helpers/binary");
 const compose = require("crocks/helpers/compose");
 const converge = require("crocks/combinators/converge");
 const curry = require("crocks/helpers/curry");
 const flip = require("crocks/combinators/flip");
 const identity = require("crocks/combinators/identity");
+const ifElse = require("crocks/logic/ifElse");
 const option = require("crocks/pointfree/option");
+const substitution = require("crocks/combinators/substitution");
 
 const { getKeys, getValue, reduceToMap, setValue } = require("../Map");
 const { inc } = require("../math");
+const { isGreaterThanEqualTo } = require("../predicates");
 
 // countItem :: Map a Integer -> a -> Map a Integer
 const countItem = flip((key) =>
@@ -34,6 +41,28 @@ const slice = curry((start, end, arr) =>
 )
 
 /*
+ * Slice from a position to the end of the list.
+ */
+// sliceFrom :: Integer -> [ a ] -> [ a ]
+const sliceFrom = (start) =>
+	substitution(flip(slice(start)), length)
+
+/*
+ * Slice from the start of the list to a position.
+ */
+// sliceTo :: Integer -> [ a ] -> [ a ]
+const sliceTo = slice(0)
+
+// take :: Integer -> [a] -> Result [a] (Pair [a] [a])
+const take = curry((n) =>
+	ifElse(
+		compose(isGreaterThanEqualTo(n), length),
+		converge(binary(compose(Result.Ok, Pair)), sliceFrom(n), sliceTo(n)),
+		Result.Err
+	)
+)
+
+/*
  * Filters a list of data for unique items
  */
 // unique :: Foldable f => f a -> [ a ]
@@ -43,5 +72,8 @@ const unique =
 module.exports = {
 	length,
 	slice,
+	sliceFrom,
+	sliceTo,
+	take,
 	unique
 }
