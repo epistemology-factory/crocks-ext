@@ -6,6 +6,7 @@ name: Publish package
 on:
   release:
     types: [ created ]
+  workflow_dispatch:
 
 jobs:
   publish-npm:
@@ -19,6 +20,9 @@ jobs:
           cache: 'npm'
       - run: npm ci
       - run: npm run dist:build
-      - run: npm run dist:publish
-        env:
-          NODE_AUTH_TOKEN: ${{secrets.npm_token}}
+
+      - uses: JS-DevTools/npm-publish@v2
+        with:
+          token: ${{ secrets.NPM_TOKEN }}
+          package: build
+          dryRun: true
