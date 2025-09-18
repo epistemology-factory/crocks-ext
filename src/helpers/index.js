@@ -9,6 +9,7 @@ const constant = require("crocks/combinators/constant");
 const flip = require("crocks/combinators/flip");
 const identity = require("crocks/combinators/identity");
 const liftA2 = require("crocks/helpers/liftA2");
+const liftA3 = require("crocks/helpers/liftA3");
 const map = require("crocks/pointfree/map");
 const nAry = require("crocks/helpers/nAry");
 const pipe = require("crocks/helpers/pipe");
@@ -35,6 +36,12 @@ const applyFunctor = flip(pipe(applyTo, map));
 const chainLiftA2 = nAry(3, composeK(identity, liftA2))
 
 /*
+ * Useful when the result of a liftA3 returns a Monad, so that we can fold out the inner Monad.
+ */
+// chainLiftA3 :: Applicative m => (a -> b -> c -> m d) -> m a -> m b -> m c -> m d
+const chainLiftA3 = nAry(4, composeK(identity, liftA3))
+
+/*
  * Converts a 'Nothing' tail into a 'Just []'
  *
  * When concat'ing Maybe's if one is a Nothing, the result is a Nothing
@@ -48,6 +55,7 @@ const prepend = flip(concat);
 module.exports = {
 	applyFunctor,
 	chainLiftA2,
+	chainLiftA3,
 	emptyTail,
 	prepend
 }

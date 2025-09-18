@@ -13,6 +13,7 @@ const { assertThat, is } = require("hamjest");
 const {
 	applyFunctor,
 	chainLiftA2,
+	chainLiftA3,
 	emptyTail
 } = require("../../src/helpers");
 const { throwContents } = require("../../src/utils");
@@ -46,6 +47,22 @@ describe("helpers", function() {
 			const result = chainLiftA2(add)(Just(2))(Just(3));
 
 			assertThat(result.option(0), is(5));
+		});
+	});
+
+	describe("chainLiftA3", function() {
+		const mult = (a) => (b) => (c) => Just(a + b + c)
+
+		it("should unwrap inner applicative", function() {
+			const result = chainLiftA3(mult, Just(1), Just(2), Just(3));
+
+			assertThat(result.option(0), is(6));
+		});
+
+		it("should curry arguments", function() {
+			const result = chainLiftA3(mult)(Just(1))(Just(2))(Just(3));
+
+			assertThat(result.option(0), is(6));
 		});
 	});
 
