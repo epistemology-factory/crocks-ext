@@ -9,6 +9,8 @@ const curry = require("crocks/helpers/curry");
 const either = require("crocks/pointfree/either");
 const head = require("crocks/pointfree/head");
 const ifElse = require("crocks/logic/ifElse");
+const init = require("crocks/pointfree/init");
+const last = require("crocks/pointfree/last");
 const option = require("crocks/pointfree/option");
 const tail = require("crocks/pointfree/tail");
 
@@ -17,16 +19,14 @@ const rest = composeB(option([]))
 
 /*
  * `ifItem` tests the item against a predicate. If true, the item is passed to the
- * reducer function, and the result is passed to `reduceWhile` to continue reducing.
- * If false, the item is ignored and the initial value is returned.
+ * reducer function. If false, the item is ignored and the accumulator is returned.
  */
-// ifItem :: Foldable f => (a -> b -> Boolean) -> (a -> b -> a) -> a -> b -> (f b -> a)
-const ifItem = curry((pred, f, init) =>
-	ifElse(pred(init), compose(reduceWhile(pred)(f), f(init)), constant(constant(init)))
-)
+// ifItem :: Foldable f => (b -> Boolean) -> (b -> (f b -> a) -> (() -> (f b -> a) -> b -> (f b -> a)
+const ifItem = ifElse
 
 /*
- * `noItem` returns a function that when given a Foldable will return the initial value.
+ * `noItem` returns a function that when given a Foldable will return a function that
+ * returns the initial value.
  */
 // noItem :: Foldable f => a -> (f b -> a)
 const noItem = constant
@@ -35,13 +35,16 @@ const noItem = constant
  * `reduceItem` takes an item from a list and applies a function to it.
  * The result is a function that can be applied to a list to continue reducing.
  */
-// reduceItem :: Foldable f => (f b -> Maybe b) -> (b -> (f b -> a)) -> (f b -> a) -> f b -> (f b -> a)
+// reduceItem :: Foldable f => (f b -> Maybe b) -> (b -> (f b -> a)) -> (() -> (f b -> a)) -> f b -> (f b -> a)
 const reduceItem = curry((item, ifItem, noItem) =>
-	compose(either(constant(noItem), ifItem), item)
+	compose(either(noItem, ifItem), item)
 )
 
 /*
  * `reduce` reduces a list as long as the predicate function holds true.
+ *
+ * `reduce` uses continuations to branch the flow of execution by returning a function that
+ * can be applied to a list of items to continue reducing, or to just return the accumulator.
  *
  * Due to the predicate function being curried, if the predicate is only interested in the
  * accumulator, it should return a function wrapping the test so that the item is ignored.
@@ -51,17 +54,26 @@ const reduceItem = curry((item, ifItem, noItem) =>
  * The `reducer` and `rest` functions are passed so that the `reduce` function can be used
  * either left-right or right-left.
  */
-// reduce :: Foldable f => ((b -> (f b -> a)) -> (f b -> a) -> f b -> (f b -> a)) -> (f a -> f a) -> (a -> b -> Boolean) -> (a -> b -> a) -> a -> f b -> a
-const reduce = curry((reducer, rest, pred, f, acc) =>
+// reduce :: Foldable f => ((b -> (f b -> a)) -> (() -> (f b -> a)) -> f b -> (f b -> a)) -> (f b -> f b) -> (a -> b -> Boolean) -> (a -> b -> a) -> a -> f b -> a
+const reduce = curry((step, rest, pred, reducer, a) =>
 	/*
 	 * We want to apply the function to the entire array.
 	 * Using `map` would see the array mapped over.
 	 */
-	converge(applyTo, rest, reducer(ifItem(pred)(f)(acc))(noItem(acc)))
+	converge(
+		applyTo,
+		rest,
+		step
+			(ifItem(pred(a))(compose(reduce(step)(rest)(pred)(reducer), reducer(a)))(constant(constant(a))))
+			(noItem(constant(a)))
+	)
 )
+
+const reduceRightWhile = reduce(reduceItem(last), rest(init))
 
 const reduceWhile = reduce(reduceItem(head), rest(tail))
 
 module.exports = {
+	reduceRightWhile,
 	reduceWhile
 }
