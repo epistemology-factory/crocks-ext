@@ -33,7 +33,7 @@ const noItem = constant
 
 /*
  * `reduceItem` takes an item from a list and applies a function to it.
- * The result is a function that can be applied to a list to continue reducing.
+ * The result is a function (continuation) that can be applied to a list to continue reducing.
  */
 // reduceItem :: Foldable f => (f b -> Maybe b) -> (b -> (f b -> a)) -> (() -> (f b -> a)) -> f b -> (f b -> a)
 const reduceItem = curry((item, ifItem, noItem) =>
@@ -69,9 +69,9 @@ const reduce = curry((step, rest, pred, reducer, a) =>
 	)
 )
 
-const reduceRightWhile = reduce(reduceItem(last), rest(init))
+const reduceRightWhile = reduce(reduceItem(last))(rest(init))
 
-const reduceWhile = reduce(reduceItem(head), rest(tail))
+const reduceWhile = reduce(reduceItem(head))(rest(tail))
 
 module.exports = {
 	reduceRightWhile,
