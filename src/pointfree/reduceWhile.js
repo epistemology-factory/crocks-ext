@@ -5,24 +5,37 @@ const compose = require("crocks/helpers/compose");
 const constant = require("crocks/combinators/constant");
 const converge = require("crocks/combinators/converge");
 const curry = require("crocks/helpers/curry");
+const either = require("crocks/pointfree/either");
 const head = require("crocks/pointfree/head");
 const ifElse = require("crocks/logic/ifElse");
 const option = require("crocks/pointfree/option");
-const map = require("crocks/pointfree/map");
 const tail = require("crocks/pointfree/tail");
 
 // rest :: Foldable f => f a -> f a
 const rest = compose(option([]), tail)
 
-// ifHead :: (b -> Boolean) -> (b -> (f b -> a)) -> (b -> (f b -> a)) -> b -> (f b -> a)
-const ifHead = ifElse
+/*
+ * `ifHead` tests the item (head) against a predicate. If true, the item is passed to the
+ * reducer function, and the result is passed to `reduceWhile` to continue reducing. If false,
+ * the item is ignored and the initial value is returned.
+ */
+// ifHead :: Foldable f => (a -> b -> Boolean) -> (a -> b -> a) -> a -> b -> (f b -> a)
+const ifHead = curry((pred, f, init) =>
+	ifElse(pred(init), compose(reduceWhile(pred)(f), f(init)), constant(constant(init)))
+)
 
-// noHead :: a -> (f b -> a)
+/*
+ * `noHead` returns a function that when given a Foldable will return the initial value.
+ */
+// noHead :: Foldable f => a -> (f b -> a)
 const noHead = constant
 
+/*
+ * `reduceHead` takes the head of a list and applies a function to it.
+ */
 // reduceHead :: Foldable f => (b -> (f b -> a)) -> (f b -> a) -> f b -> (f b -> a)
 const reduceHead = curry((ifHead, noHead) =>
-	compose(option(noHead), map(ifHead), head)
+	compose(either(constant(noHead), ifHead), head)
 )
 
 /*
@@ -35,18 +48,11 @@ const reduceHead = curry((ifHead, noHead) =>
  */
 // reduceWhile :: Foldable f => (a -> b -> Boolean) -> (a -> b -> a) -> a -> f b -> a
 const reduceWhile = curry((pred, f, acc) =>
-	converge(
-		/*
-		 * We want to apply the function to the entire array.
-		 * Using `map` would see the array mapped over.
-		 */
-		applyTo,
-		rest,
-		reduceHead(
-			ifHead(pred(acc), compose(reduceWhile(pred, f), f(acc)), constant(constant(acc))),
-			noHead(acc)
-		)
-	)
+	/*
+	 * We want to apply the function to the entire array.
+	 * Using `map` would see the array mapped over.
+	 */
+	converge(applyTo, rest, reduceHead(ifHead(pred)(f)(acc), noHead(acc)))
 )
 
 module.exports = {
