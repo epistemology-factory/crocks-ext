@@ -1,5 +1,6 @@
 "use strict";
 
+const compose2 = require("crocks/combinators/compose2");
 const converge = require("crocks/combinators/converge");
 const curry = require("crocks/helpers/curry");
 const head = require("crocks/pointfree/head");
@@ -27,13 +28,26 @@ const collect = curry((reduce, item, rest, fn) =>
 	converge(liftA2(reduce(fn)), item, rest)
 )
 
-// collect :: Foldable f => (a -> a -> a) -> f a -> Maybe a
+// collectLeft :: Foldable f => (a -> a -> a) -> f a -> Maybe a
 const collectLeft = collect(reduce)(head)(tail)
 
 // collectRight :: Foldable f => (a -> a -> a) -> f a -> Maybe a
 const collectRight = collect(reduceRight)(last)(init)
 
+// mapCollect :: Foldable f => ((b -> b -> a) -> f b -> Maybe a) -> (b -> a) -> (a -> a -> a) -> f b -> Maybe a
+const mapCollect = curry((reducer, map, reduce) =>
+	reducer(compose2(reduce)(map)(map))
+)
+
+// mapCollectLeft :: Foldable f => ((a -> a -> a) -> f a -> Maybe a) -> (b -> a) -> (a -> a -> a) -> f b -> Maybe a
+const mapCollectLeft = mapCollect(collectLeft)
+
+// mapCollectRight :: Foldable f => ((a -> a -> a) -> f a -> Maybe a) -> (b -> a) -> (a -> a -> a) -> f b -> Maybe a
+const mapCollectRight = mapCollect(collectRight)
+
 module.exports = {
 	collect: collectLeft,
-	collectRight
+	collectRight,
+	mapCollect: mapCollectLeft,
+	mapCollectRight
 }

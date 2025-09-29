@@ -4,14 +4,21 @@ const { curry } = require("crocks");
 
 const { assertThat, is } = require("hamjest");
 
-const { collect, collectRight } = require("../../src/pointfree/collect");
+const {
+	collect,
+	collectRight,
+	mapCollect,
+	mapCollectRight
+} = require("../../src/pointfree/collect");
 
 describe("collect", function() {
 	const minus = curry((a, b) => a - b)
-
 	const sum = curry((a, b) => a + b)
+	const toString = (x) => x.toString()
+	const toInt = (x) => parseInt(x)
 
-	const data = [ 1, 2, 3, 4, 5, 6 ];
+	const nums = [ 1, 2, 3, 4, 5, 6 ];
+	const strs = nums.map(toString);
 
 	describe("collect", function() {
 		it("should return nothing for empty list", function() {
@@ -27,7 +34,7 @@ describe("collect", function() {
 		});
 
 		it("should reduce list", function() {
-			const result = collect(sum)(data).option(null);
+			const result = collect(sum)(nums).option(null);
 
 			assertThat(result, is(21));
 		});
@@ -47,7 +54,47 @@ describe("collect", function() {
 		});
 
 		it("should reduce list", function() {
-			const result = collectRight(minus)(data).option(null);
+			const result = collectRight(minus)(nums).option(null);
+
+			assertThat(result, is(-9));
+		});
+	});
+
+	describe("mapCollect", function() {
+		it("should return nothing for empty list", function() {
+			const result = mapCollect(toInt)(sum)([]).option(null);
+
+			assertThat(result, is(null));
+		});
+
+		it("should return nothing for list with single item", function() {
+			const result = mapCollect(toInt)(sum)([ 1 ]).option(null);
+
+			assertThat(result, is(null));
+		});
+
+		it("should reduce list", function() {
+			const result = mapCollect(toInt)(sum)(strs).option(null);
+
+			assertThat(result, is(21));
+		});
+	});
+
+	describe("mapCollectRight", function() {
+		it("should return nothing for empty list", function() {
+			const result = mapCollectRight(toInt)(minus)([]).option(null);
+
+			assertThat(result, is(null));
+		});
+
+		it("should return nothing for list with single item", function() {
+			const result = mapCollectRight(toInt)(minus)([ 1 ]).option(null);
+
+			assertThat(result, is(null));
+		});
+
+		it("should reduce list", function() {
+			const result = mapCollectRight(toInt)(minus)(nums).option(null);
 
 			assertThat(result, is(-9));
 		});
