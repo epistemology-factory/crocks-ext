@@ -39,10 +39,10 @@ const mapCollect = curry((reducer, map, reduce) =>
 	reducer(compose2(reduce)(map)(map))
 )
 
-// mapCollectLeft :: Foldable f => ((a -> a -> a) -> f a -> Maybe a) -> (b -> a) -> (a -> a -> a) -> f b -> Maybe a
+// mapCollectLeft :: Foldable f => (b -> a) -> (a -> a -> a) -> f b -> Maybe a
 const mapCollectLeft = mapCollect(collectLeft)
 
-// mapCollectRight :: Foldable f => ((a -> a -> a) -> f a -> Maybe a) -> (b -> a) -> (a -> a -> a) -> f b -> Maybe a
+// mapCollectRight :: Foldable f => (b -> a) -> (a -> a -> a) -> f b -> Maybe a
 const mapCollectRight = mapCollect(collectRight)
 
 module.exports = {
