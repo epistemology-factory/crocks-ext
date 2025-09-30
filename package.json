@@ -1,6 +1,6 @@
 {
   "name": "@epistemology-factory/crocks-ext",
-  "version": "0.0.30",
+  "version": "0.0.31",
   "description": "Utility functions for use with Crocks",
   "engines": {
     "node": ">=12.22.0 <=18.13.x",
