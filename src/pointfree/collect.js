@@ -8,7 +8,7 @@ const init = require("crocks/pointfree/init");
 const last = require("crocks/pointfree/last");
 const liftA2 = require("crocks/helpers/liftA2");
 const reduce = require("crocks/pointfree/reduce");
-const reduceRight = require("crocks/pointfree/reduce");
+const reduceRight = require("crocks/pointfree/reduceRight");
 const tail = require("crocks/pointfree/tail");
 
 /*
