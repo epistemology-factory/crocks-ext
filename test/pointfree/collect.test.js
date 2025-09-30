@@ -14,8 +14,19 @@ const {
 describe("collect", function() {
 	const minus = curry((a, b) => a - b)
 	const sum = curry((a, b) => a + b)
+
+	// toString :: Number -> String
 	const toString = (x) => x.toString()
-	const toInt = (x) => parseInt(x)
+
+	// toInt :: String -> Number
+	const toInt = (a) => {
+		// this makes sure we're not mapping the accumulator multiple times.
+		if (typeof a !== "string") {
+			throw new TypeError("toInt: a must be a string")
+		}
+
+		return parseInt(a)
+	}
 
 	const nums = [ 1, 2, 3, 4, 5, 6 ];
 	const strs = nums.map(toString);
@@ -68,7 +79,7 @@ describe("collect", function() {
 		});
 
 		it("should return nothing for list with single item", function() {
-			const result = mapCollect(toInt)(sum)([ 1 ]).option(null);
+			const result = mapCollect(toInt)(sum)([ "1" ]).option(null);
 
 			assertThat(result, is(null));
 		});
@@ -88,13 +99,13 @@ describe("collect", function() {
 		});
 
 		it("should return nothing for list with single item", function() {
-			const result = mapCollectRight(toInt)(minus)([ 1 ]).option(null);
+			const result = mapCollectRight(toInt)(minus)([ "1" ]).option(null);
 
 			assertThat(result, is(null));
 		});
 
 		it("should reduce list", function() {
-			const result = mapCollectRight(toInt)(minus)(nums).option(null);
+			const result = mapCollectRight(toInt)(minus)(strs).option(null);
 
 			assertThat(result, is(-9));
 		});
