@@ -1,12 +1,11 @@
 "use strict";
 
-const Pair = require("crocks/Pair");
 const Result = require("crocks/Result");
 
-const binary = require("crocks/helpers/binary");
 const compose = require("crocks/helpers/compose");
 const converge = require("crocks/combinators/converge");
 const curry = require("crocks/helpers/curry");
+const fanout = require("crocks/Pair/fanout");
 const flip = require("crocks/combinators/flip");
 const identity = require("crocks/combinators/identity");
 const ifElse = require("crocks/logic/ifElse");
@@ -57,7 +56,7 @@ const sliceTo = slice(0)
 const take = curry((n) =>
 	ifElse(
 		compose(isGreaterThanEqualTo(n), length),
-		converge(binary(compose(Result.Ok, Pair)), sliceFrom(n), sliceTo(n)),
+		compose(Result.Ok, fanout(sliceFrom(n), sliceTo(n))),
 		Result.Err
 	)
 )
